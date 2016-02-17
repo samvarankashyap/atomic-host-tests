@@ -1,0 +1,120 @@
+---
+# vim: set ft=ansible:
+#
+# A playbook that performs a simple smoke test of Atomic Host upgrading to
+# a new ostree.
+#
+# This basically just does an upgrade, reboot, rollback, and reboot on an
+# Atomic Host.
+#
+# If the 'jenkins' tag is not skipped, it also performs some data gathering
+# operations which will generate output files on the host that can be
+# retrieved.
+#
+# This playbook expects the following variables defined:
+#  - datadir
+#  - initial_rpms
+#  - upgraded_rpms
+#  - output_file
+#  - version_file
+#
+# Additional variables may be required by the included task files.
+#
+# See `tests/new-tree-smoketest/group_vars/all` for example values
+#
+- name: Atomic Host new tree smoketest
+  hosts: all
+  sudo: yes
+
+  tasks:
+    - name: Check if system is an Atomic Host
+      include: ../../common/atomic.yaml
+
+    - name: Fail if system is not an Atomic Host
+      fail:
+        msg: "The system is not an Atomic Host"
+      when: not is_atomic
+
+    - name: Register using subscription-manager
+      include: ../../rhel/subscribe.yaml
+      when: ansible_distribution == "RedHat"
+
+    - name: Eliminate existing data directory
+      file:
+        path: "{{ datadir }}"
+        state: absent
+
+    - name: Make data directory
+      file:
+        path: "{{ datadir }}"
+        setype: svirt_sandbox_file_t
+        state: directory
+
+    - name: Gather initial RPM list
+      include: ../../common/rpm_list.yaml rpm_file="{{ initial_rpms }}"
+      tags:
+        - jenkins
+
+    - name: Get initial atomic version
+      shell: atomic host status | awk '/^*/{print $4}'
+      register: initial_atomic_version
+      tags:
+        - jenkins
+
+    - name: Upgrade to latest tree
+      shell: atomic host upgrade | tee atomic_host_upgrade
+      args:
+        chdir: "{{ datadir }}"
+
+    - name: Reboot the host
+      include: ../../common/ans_reboot.yaml
+
+    - name: Gather upgraded RPM list
+      include: ../../common/rpm_list.yaml rpm_file="{{ upgraded_rpms }}"
+      tags:
+        - jenkins
+
+    - name: Get upgraded atomic version
+      shell: atomic host status | awk '/^*/{print $4}'
+      register: upgraded_atomic_version
+      tags:
+        - jenkins
+
+    - name: Gather data about system
+      include: ../../common/collect_data.yaml
+      tags:
+        - jenkins
+
+    - name: Diff the RPM lists
+      shell: "diff -u {{ initial_rpms }} {{ upgraded_rpms }}"
+      args:
+        chdir: "{{ datadir }}"
+      register: rpm_diffs
+      ignore_errors: yes
+      no_log: True
+      tags:
+        - jenkins
+
+    - name: Generate the smoke test content with a template
+      template:
+        src: templates/atomic_smoke_output.j2
+        dest: "{{ datadir }}/{{ output_file }}"
+      tags:
+        - jenkins
+
+    - name: Generate the version content with a template
+      template:
+        src: templates/atomic_version.j2
+        dest: "{{ datadir}}/{{ version_file }}"
+      tags:
+        - jenkins
+
+    - name: Rollback to previous deployment
+      shell: atomic host rollback
+
+    - name: Reboot into previous deployment
+      include: ../../common/ans_reboot.yaml
+
+    - name: Remove all registrations using subscription-manager
+      include: ../../rhel/unsubscribe.yaml
+      when: ansible_distribution == "RedHat"

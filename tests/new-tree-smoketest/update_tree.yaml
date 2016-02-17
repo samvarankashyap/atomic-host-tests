@@ -1,0 +1,11 @@
+---
+# vim: set ft=ansible:
+#
+# Simple task that tries to upgrade the Atomic Host
+#
+- name: Upgrade Atomic Host
+  command: atomic host upgrade
+  register: result
+  until: result.rc == 0
+  retries: 3
+  delay: 5
