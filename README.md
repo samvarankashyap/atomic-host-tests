@@ -31,4 +31,4 @@ than copying the same tasks into a role structure for each playbook.
 Please see the individual test directories for details on how to run the
 playbooks and any specific options/configurations that are required.
 
-For example, the [new tree smoketest README](https://github.com/miabbott/atomic-tests/blob/master/tests/new-tree-smoketest/README.md).
+For example, the [new tree smoketest README](/tests/new-tree-smoketest/README.md).
