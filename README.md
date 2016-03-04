@@ -1,4 +1,4 @@
-# atomic-tests
+# atomic-host-tests
 This repo will contain a number of Ansible playbooks that can be used to run
 tests against an Atomic Host.
 
