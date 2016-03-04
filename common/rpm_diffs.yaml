@@ -1,0 +1,21 @@
+---
+# vim: set ft=ansible:
+#
+# Task to generate diff between two files containing lists of RPMs
+#
+# Expects the following variables to be defined:
+#   - datadir
+#   - initial_rpms
+#   - upgraded_rpms
+#
+- name: Diff the RPM lists
+  shell: "diff -u {{ initial_rpms }} {{ upgraded_rpms }}"
+  args:
+    chdir: "{{ datadir }}"
+  register: diffs
+  ignore_errors: yes
+  no_log: True
+
+- name: Set RPM diff fact
+  set_fact:
+    rpm_diffs: "{{ diffs }}"

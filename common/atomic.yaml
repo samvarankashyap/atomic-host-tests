@@ -19,3 +19,8 @@
   set_fact:
     is_atomic: true
   when: s.stat.exists
+
+- name: Fail if system is not an Atomic Host
+  fail:
+    msg: "The system is not an Atomic Host"
+  when: not is_atomic
