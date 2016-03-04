@@ -13,9 +13,9 @@ available for users to rely on.
 under test (basically SSH), so playbooks can be used across multiple
 platforms with little changes necessary.
 
-1. When a task in Ansible fails, the whole playbook fails (for the most
-part).  Thus, if something fails during the execution, that is a good
-indication that something broke.
+1. Fail fast and early.  When a task in Ansible fails, the whole playbook
+fails (for the most part).  Thus, if something fails during the execution,
+that is a good indication that something broke.
 
 ### Directory Layout
 The directory structure attempts to break out functionality into separate
