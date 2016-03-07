@@ -1,11 +1,11 @@
 ---
 # vim: set ft=ansible:
 #
-# A playbook that performs a simple smoke test of Atomic Host upgrading to
-# a new ostree.
+# This playbook performs a simple smoketest of a new Atomic Host cloud image.
 #
-# This basically just does an upgrade, reboot, rollback, and reboot on an
-# Atomic Host.
+# The test assumes that new ostree content and cloud image have been released
+# simultaneously.  Therefore, it tests if an upgrade is available (it shouldn't
+# be) and if a rollback is possilbe (also should not be).
 #
 # If the 'jenkins' tag is not skipped, it also performs some data gathering
 # operations which will generate output files on the host that can be
@@ -20,15 +20,12 @@
 #
 # See `tests/new-tree-smoketest/group_vars/all` for example values
 #
-- name: Atomic Host new tree smoketest
+- name: Atomic Host new image smoketest
   hosts: all
   sudo: yes
 
   vars_files:
     - ../../vars/smoketest_vars.yaml
-
-  vars:
-    - upgraded_rpms: "upgraded_rpm_list.txt"
 
   tasks:
     - name: Check if system is an Atomic Host
@@ -52,24 +49,15 @@
       tags:
         - jenkins
 
-    - name: Upgrade to latest tree
-      shell: atomic host upgrade | tee atomic_host_upgrade
-      args:
-        chdir: "{{ datadir }}"
+    - name: Check for available upgrade
+      shell: atomic host upgrade
+      register: upgrade
+      failed_when: "upgrade.rc < 77"
 
-    - name: Reboot the host
-      include: ../../common/ans_reboot.yaml
-
-    - name: Gather upgraded RPM list
-      include: ../../common/rpm_list.yaml rpm_file="{{ upgraded_rpms }}"
-      tags:
-        - jenkins
-
-    - name: Get upgraded atomic version
-      shell: atomic host status | awk '/^*/{print $4}'
-      register: upgraded_atomic_version
-      tags:
-        - jenkins
+    - name: Check for available rollback
+      shell: atomic host rollback
+      register: rollback
+      failed_when: "rollback.rc != 1"
 
     - name: Gather data about system
       include: ../../common/collect_data.yaml
@@ -80,12 +68,6 @@
       include: ../../common/output_files.yaml
       tags:
         - jenkins
-
-    - name: Rollback to previous deployment
-      shell: atomic host rollback
-
-    - name: Reboot into previous deployment
-      include: ../../common/ans_reboot.yaml
 
     - name: Remove all registrations using subscription-manager
       include: ../../rhel/unsubscribe.yaml
