@@ -53,7 +53,11 @@
     redhat_release: "{{ rhr.stdout }}"
     os_release: "{{ osr.stdout }}"
 
-- name: Check for ostree signature
+- name: Check for ostree signature (CentOS)
+  shell: ostree show "{{ commit_id }}" | grep "{{ centos_key_id }}"
+  when: ansible_distribution == "CentOS"
+
+- name: Check for ostree signature (RHEL)
   shell: ostree show "{{ commit_id }}" | grep "{{ redhat_key_id }}"
   when: ansible_distribution == "RedHat"
 
