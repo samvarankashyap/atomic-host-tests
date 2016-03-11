@@ -5,7 +5,7 @@ Host variants of CentOS, Fedora, and Red Hat Enterprise Linux.
 ### Prerequisites
   - Configure necessary variables
 
-    See [group_vars/all](https://github.com/miabbott/atomic-host-tests/blob/test-readme/tests/new-tree-smoketest/group_vars/all) for example values
+    Confirm that you have the desired values in [vars/smoketest_vars.yaml](https://github.com/miabbott/atomic-host-tests/blob/master/vars/smoketest_vars.yaml)
 
   - Configure subscription data (if used)
 
@@ -35,7 +35,7 @@ If you would like to skip these tasks:
 $ ansible-playbook -i inventory main.yaml --skip-tags jenkins
 ```
 
-#### Example Test Output from Fedora Host
+#### Example Test Output from Fedora Atomic Host
 ```
 $ ansible-playbook -i inventory main.yaml
 

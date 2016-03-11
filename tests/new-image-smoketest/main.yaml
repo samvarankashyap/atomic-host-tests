@@ -16,7 +16,7 @@
 #  - initial_rpms
 #  - upgraded_rpms
 #
-# Additional variables may be required by the included task files.
+# Most variables are defined in the included file 'vars/smoketest_vars.yaml'
 #
 # See `tests/new-tree-smoketest/group_vars/all` for example values
 #
