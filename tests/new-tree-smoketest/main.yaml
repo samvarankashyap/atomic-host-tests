@@ -18,7 +18,7 @@
 #
 # Additional variables may be required by the included task files.
 #
-# See `tests/new-tree-smoketest/group_vars/all` for example values
+# Most variables are defined in the included file 'vars/smoketest_vars.yaml'
 #
 - name: Atomic Host new tree smoketest
   hosts: all
