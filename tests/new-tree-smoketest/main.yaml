@@ -41,6 +41,12 @@
     - name: Setup data directory
       include: ../../common/data_dir.yaml
 
+    - name: Copy downgrade check script
+      copy:
+        dest: "{{ datadir }}/check_downgrade.py"
+        mode: 0744
+        src: ../../common/scripts/check_downgrade.py
+
     - name: Gather initial RPM list
       include: ../../common/rpm_list.yaml rpm_file="{{ initial_rpms }}"
       tags:
@@ -56,6 +62,9 @@
       shell: atomic host upgrade | tee atomic_host_upgrade
       args:
         chdir: "{{ datadir }}"
+
+    - name: Run downgrade check script
+      command: "{{ datadir }}/check_downgrade.py {{ datadir }}/atomic_host_upgrade"
 
     - name: Reboot the host
       include: ../../common/ans_reboot.yaml
