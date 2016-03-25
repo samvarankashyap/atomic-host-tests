@@ -38,6 +38,9 @@
     - name: Setup data directory
       include: ../../common/data_dir.yaml
 
+    - name: Check /tmp (BZ 1276775)
+      include: ../../common/check_tmp_perms.yaml
+
     - name: Gather initial RPM list
       include: ../../common/rpm_list.yaml rpm_file="{{ initial_rpms }}"
       tags:

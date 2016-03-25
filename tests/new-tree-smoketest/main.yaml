@@ -69,6 +69,9 @@
     - name: Reboot the host
       include: ../../common/ans_reboot.yaml
 
+    - name: Check /tmp (BZ 1276775)
+      include: ../../common/check_tmp_perms.yaml
+
     - name: Gather upgraded RPM list
       include: ../../common/rpm_list.yaml rpm_file="{{ upgraded_rpms }}"
       tags:
