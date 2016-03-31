@@ -13,8 +13,8 @@
   args:
     chdir: "{{ datadir }}"
   register: diffs
-  ignore_errors: yes
   no_log: True
+  failed_when: diffs.rc != 1
 
 - name: Set RPM diff fact
   set_fact:
