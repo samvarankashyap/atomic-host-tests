@@ -7,7 +7,7 @@ and subsequent reboot.
 
     If running against a RHEL Atomic Host, you should provide subscription
     data that can be used by `subscription-manager`.  See
-    [common/rhel/subscribe.yaml](https://github.com/miabbott/atomic-host-tests/blob/test-readme/rhel/subscribe.yaml) for addiltional details.
+    [rhel/subscribe.yaml](/rhel/subscribe.yaml) for addiltional details.
 
 ### Running the Playbook
 
