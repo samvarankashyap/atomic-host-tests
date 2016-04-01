@@ -10,7 +10,7 @@ portability, and 3) simplicity.
 available for users to rely on.
 
 1. Ansible requires only a small amount of functionality on the system
-under test (basically SSH), so playbooks can be used across multiple
+under test (basically Python and SSH), so playbooks can be used across multiple
 platforms with little changes necessary.
 
 1. Fail fast and early.  When a task in Ansible fails, the whole playbook
