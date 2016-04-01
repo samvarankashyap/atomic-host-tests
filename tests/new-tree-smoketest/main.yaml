@@ -26,6 +26,7 @@
 
   vars_files:
     - ../../vars/smoketest_vars.yaml
+    - ../../vars/subscription.yaml
 
   vars:
     - upgraded_rpms: "upgraded_rpm_list.txt"

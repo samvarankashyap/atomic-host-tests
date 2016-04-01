@@ -1,5 +1,4 @@
 ---
-subscription_file: "subscription_data.csv"
 datadir: "/var/qe"
 output_file: "atomic_smoke_output.txt"
 version_file: "atomic_version.txt"
