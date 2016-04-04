@@ -54,18 +54,18 @@
         - jenkins
 
     - name: Get initial atomic version
-      shell: atomic host status | awk '/^*/{print $4}'
+      shell: rpm-ostree status | awk '/^*/{print $4}'
       register: initial_atomic_version
       tags:
         - jenkins
 
     - name: Upgrade to latest tree
-      shell: atomic host upgrade | tee atomic_host_upgrade
+      shell: rpm-ostree upgrade | tee rpm_ostree_upgrade
       args:
         chdir: "{{ datadir }}"
 
     - name: Run downgrade check script
-      command: "{{ datadir }}/check_downgrade.py {{ datadir }}/atomic_host_upgrade"
+      command: "{{ datadir }}/check_downgrade.py {{ datadir }}/rpm_ostree_upgrade"
 
     - name: Reboot the host
       include: ../../common/ans_reboot.yaml
@@ -79,7 +79,7 @@
         - jenkins
 
     - name: Get upgraded atomic version
-      shell: atomic host status | awk '/^*/{print $4}'
+      shell: rpm-ostree status | awk '/^*/{print $4}'
       register: upgraded_atomic_version
       tags:
         - jenkins
@@ -95,7 +95,7 @@
         - jenkins
 
     - name: Rollback to previous deployment
-      shell: atomic host rollback
+      shell: rpm-ostree rollback
 
     - name: Reboot into previous deployment
       include: ../../common/ans_reboot.yaml
