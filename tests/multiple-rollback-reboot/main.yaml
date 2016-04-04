@@ -26,7 +26,7 @@
       when: ansible_distribution == "RedHat"
 
     - name: Upgrade to latest tree
-      command: atomic host upgrade
+      command: rpm-ostree upgrade
 
     - name: Reboot into new tree
       include: ../../common/ans_reboot.yaml

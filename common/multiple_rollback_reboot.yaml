@@ -16,7 +16,7 @@
 - set_fact: secondary_version="{{ s.stdout }}"
 
 - name: Rollback #1 (to secondary deployment)
-  command: atomic host rollback
+  command: rpm-ostree rollback
 
 - name: Reboot #1
   include: ans_reboot.yaml
@@ -25,7 +25,7 @@
   include: compare_version.yaml expected_version="{{ secondary_version }}"
 
 - name: Rollback #2 (to original deployment)
-  command: atomic host rollback
+  command: rpm-ostree rollback
 
 - name: Reboot #2
   include: ans_reboot.yaml
@@ -34,7 +34,7 @@
   include: compare_version.yaml expected_version="{{ original_version }}"
 
 - name: Rollback #3 (to secondary deployment)
-  command: atomic host rollback
+  command: rpm-ostree rollback
 
 - name: Reboot #3
   include: ans_reboot.yaml
@@ -43,7 +43,7 @@
   include: compare_version.yaml expected_version="{{ secondary_version }}"
 
 - name: Rollback #4 (to original deployment)
-  command: atomic host rollback
+  command: rpm-ostree rollback
 
 - name: Reboot #4
   include: ans_reboot.yaml
@@ -52,7 +52,7 @@
   include: compare_version.yaml expected_version="{{ original_version }}"
 
 - name: Rollback #5 (to secondary deployment)
-  command: atomic host rollback
+  command: rpm-ostree rollback
 
 - name: Reboot #5
   include: ans_reboot.yaml
@@ -61,7 +61,7 @@
   include: compare_version.yaml expected_version="{{ secondary_version }}"
 
 - name: Rollback #6 (to original deployment)
-  command: atomic host rollback
+  command: rpm-ostree rollback
 
 - name: Reboot #6
   include: ans_reboot.yaml
@@ -70,7 +70,7 @@
   include: compare_version.yaml expected_version="{{ original_version }}"
 
 - name: Rollback #7 (to secondary deployment)
-  command: atomic host rollback
+  command: rpm-ostree rollback
 
 - name: Reboot #7
   include: ans_reboot.yaml
@@ -79,7 +79,7 @@
   include: compare_version.yaml expected_version="{{ secondary_version }}"
 
 - name: Rollback #8 (to original deployment)
-  command: atomic host rollback
+  command: rpm-ostree rollback
 
 - name: Reboot #8
   include: ans_reboot.yaml
@@ -88,7 +88,7 @@
   include: compare_version.yaml expected_version="{{ original_version }}"
 
 - name: Rollback #9 (to secondary deployment)
-  command: atomic host rollback
+  command: rpm-ostree rollback
 
 - name: Reboot #9
   include: ans_reboot.yaml
@@ -97,7 +97,7 @@
   include: compare_version.yaml expected_version="{{ secondary_version }}"
 
 - name: Rollback #10 (to original deployment)
-  command: atomic host rollback
+  command: rpm-ostree rollback
 
 - name: Reboot #10
   include: ans_reboot.yaml

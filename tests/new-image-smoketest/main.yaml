@@ -48,18 +48,18 @@
         - jenkins
 
     - name: Get initial atomic version
-      shell: atomic host status | awk '/^*/{print $4}'
+      shell: rpm-ostree status | awk '/^*/{print $4}'
       register: initial_atomic_version
       tags:
         - jenkins
 
     - name: Check for available upgrade
-      shell: atomic host upgrade
+      shell: rpm-ostree upgrade
       register: upgrade
       failed_when: "upgrade.rc < 77"
 
     - name: Check for available rollback
-      shell: atomic host rollback
+      shell: rpm-ostree rollback
       register: rollback
       failed_when: "rollback.rc != 1"
 
