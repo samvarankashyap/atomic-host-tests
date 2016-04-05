@@ -2,6 +2,12 @@
 This repo will contain a number of Ansible playbooks that can be used to run
 tests against an Atomic Host.
 
+The intent is to have a collection of tests that can be used to test the
+CentOS, Fedora, and RHEL versions of Atomic Host.
+
+*NOTE*:  This repo only provides playbooks/tests and does not currently
+provide any way for provisioning test resources/infrastructure.
+
 ### Why Ansible?
 The reasons for choosing Ansible playbooks are mainly 1) ease of use, 2)
 portability, and 3) simplicity.
