@@ -1,11 +1,11 @@
-# atomic-host-tests
+# Atomic Host Tests
 This repo will contain a number of Ansible playbooks that can be used to run
 tests against an Atomic Host.
 
 The intent is to have a collection of tests that can be used to test the
 CentOS, Fedora, and RHEL versions of Atomic Host.
 
-*NOTE*:  This repo only provides playbooks/tests and does not currently
+**NOTE**:  This repo only provides playbooks/tests and does not currently
 provide any way for provisioning test resources/infrastructure.
 
 ### Why Ansible?
@@ -23,6 +23,19 @@ platforms with little changes necessary.
 fails (for the most part).  Thus, if something fails during the execution,
 that is a good indication that something broke.
 
+### Running Playbooks
+All the playbooks should be able to be run without any extra options on the
+command line.  Like so:
+
+`# ansible-playbook -i inventory tests/new-tree-smoketest.main.yaml`
+
+However, some tests do accept extra arguments that can change how the test is
+run; please see the README for each test for details.
+
+Additionally, certain variables are required to be configured for each test and
+the required variables can vary between tests.  There are sensible defaults
+provided, but it is up to the user to configure them as they see fit.
+
 ### Directory Layout
 The directory structure attempts to break out functionality into separate
 sub-directories where appropriate.  For example, the `common` directory has
@@ -33,8 +46,3 @@ The tests use `include:` to bring in tasks to the playbook rather than using
 roles.  This was done in hopes that re-use of tasks could be achieved rather
 than copying the same tasks into a role structure for each playbook.
 
-### Running Playbooks
-Please see the individual test directories for details on how to run the
-playbooks and any specific options/configurations that are required.
-
-For example, the [new tree smoketest README](/tests/new-tree-smoketest/README.md).
