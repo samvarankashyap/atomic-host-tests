@@ -36,6 +36,8 @@ Additionally, certain variables are required to be configured for each test and
 the required variables can vary between tests.  There are sensible defaults
 provided, but it is up to the user to configure them as they see fit.
 
+**NOTE:**  The playbooks were developed/tested using Ansible 1.9.4
+
 ### Directory Layout
 The directory structure attempts to break out functionality into separate
 sub-directories where appropriate.  For example, the `common` directory has
