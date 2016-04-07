@@ -8,7 +8,7 @@
 # Expects the following variable to be defined:
 #  - subscription_file
 #
-# NOTE: The 'subscription_file' variable lives in var/smoketest_vars.yaml
+# NOTE: The 'subscription_file' variable lives in vars/subscription.yaml
 #
 # NOTE: It is suggested that the value of `subscription_file` point to a file
 #       that is dropped into the same directory as this task file.  This will
