@@ -5,6 +5,8 @@ tests against an Atomic Host.
 The intent is to have a collection of tests that can be used to test the
 CentOS, Fedora, and RHEL versions of Atomic Host.
 
+Currently, these tests fall into the category of single host, integration tests.
+
 **NOTE**:  This repo only provides playbooks/tests and does not currently
 provide any way for provisioning test resources/infrastructure.
 
