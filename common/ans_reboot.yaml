@@ -19,10 +19,6 @@
 # that they don't use sudo, which may require a password, and is not necessary
 # anyway.
 
-- name: wait for hosts to come down
-  local_action: wait_for host={{ inventory_hostname }} port=22 state=stopped
-  sudo: false
-
 - name: wait for hosts to come back up
-  local_action: wait_for host={{ inventory_hostname }} port=22 state=started
+  local_action: wait_for host={{ inventory_hostname }} port=22 state=started delay=30 timeout=120
   sudo: false
