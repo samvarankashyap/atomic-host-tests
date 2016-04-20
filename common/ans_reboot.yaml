@@ -8,7 +8,10 @@
 #       To mitigate this, we prefix a sleep command before the shutdown so
 # ansible has time to move on. For more info on this issue, see:
 # https://github.com/ansible/ansible/issues/10616
-
+#
+# The Ansible docs now recommend this combination of tasks to handle reboots
+# https://support.ansible.com/hc/en-us/articles/201958037-Reboot-a-server-and-wait-for-it-to-come-back
+#
 - name: restart hosts
   shell: sleep 3 && shutdown -r now
   async: 1
@@ -20,5 +23,5 @@
 # anyway.
 
 - name: wait for hosts to come back up
-  local_action: wait_for host={{ inventory_hostname }} port=22 state=started delay=30 timeout=120
+  local_action: wait_for host={{ inventory_hostname }} port=22 state=started delay=15 timeout=120
   sudo: false
