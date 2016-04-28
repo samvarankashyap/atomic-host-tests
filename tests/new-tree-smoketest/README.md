@@ -1,6 +1,7 @@
 This playbook performs a simple test of the upgrade and rollback mechanisms
-that are present in an Atomic Host.  This playbook should run on the Atomic
-Host variants of CentOS, Fedora, and Red Hat Enterprise Linux.
+that are present in an Atomic Host.  This playbook also supports testing
+a new tree that was delivered via `rpm-ostree rebase`.  This playbook should
+run on the Atomic Host variants of CentOS, Fedora, and Red Hat Enterprise Linux.
 
 ### Prerequisites
   - Configure necessary variables
@@ -15,11 +16,34 @@ Host variants of CentOS, Fedora, and Red Hat Enterprise Linux.
 
 ### Running the Playbook
 
-To run the test, simply invoke as any other Ansible playbook:
+Before running the playbook, decide if you are testing the
+`rpm-ostree upgrade` path or `rpm-ostree rebase` path.
+
+When testing the `upgrade` path, you will need to exclude the `rpm_ostree_rebase`
+tag, like so:
 
 ```
-$ ansible-playbook -i inventory main.yaml
+$ ansible-playbook -i inventory main.yaml --skip-tags rpm_ostree_rebase
 ```
+
+When testing the `rebase` path, you will need to exclude the `rpm_ostree_upgrade`
+tag and possibly the `subscription_manager` tag.  Additionally, you will need to
+provide values to certain variables either individually via the command line or
+via a YAML file on the command line.
+
+```
+$ ansible-playbook -i inventory main.yaml --skip-tags subscription_manager,rpm_ostree_upgrade -e "@rebase_vars.yaml"
+```
+
+Example YAML variable file:
+
+```yaml
+---
+ostree_remote_name: "new-atomic"
+ostree_remote_url: "https://dl.fedoraproject.org/pub/fedora/linux/atomic/24/"
+ostree_refspec: "new-atomic:fedora-atomic/f24/x86_64/docker-host"
+```
+
 
 *NOTE*: You are responsible for providing a host to run the test against and the
 inventory file for that host.
