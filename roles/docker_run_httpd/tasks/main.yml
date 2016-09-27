@@ -25,6 +25,10 @@
 
 - name: Test connectivity to container
   command: curl http://localhost:80
+  register: curl
+  until: curl.rc == 0
+  retries: 6
+  delay: 5
 
 - name: Stop httpd container
   command: "docker stop {{ g_osname }}_httpd"
