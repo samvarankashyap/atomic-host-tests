@@ -1,0 +1,34 @@
+---
+- name: Fail when package is undefined
+  fail:
+    msg: "Package is undefined"
+  when: package is undefined
+
+- name: Get rpm-ostree status --json output
+  command: rpm-ostree status --json
+  register: installed
+
+- name: Convert rpm-ostree status output to jinja2 json
+  set_fact:
+    installed_json: "{{ installed.stdout | from_json }}"
+
+- name: Set packages when deployment 0 is booted
+  set_fact:
+    installed_pkgs: "{{ installed_json['deployments'][0]['packages'] }}"
+  when: installed_json['deployments'][0]['packages'] is defined and installed_json['deployments'][0]['booted']
+
+- name: Set packages when deployment 1 is booted
+  set_fact:
+    installed_pkgs: "{{ installed_json['deployments'][1]['packages'] }}"
+  when: installed_json['deployments'][1]['packages'] is defined and installed_json['deployments'][1]['booted']
+
+- name: Fail if {{ package }} is not in rpm-ostree status output
+  fail:
+    msg: "{{ package }} not in rpm-ostree status output"
+  when: "'{{ package }}' not in installed_pkgs"
+
+- name: Verify {{ package }} is installed
+  command: command -v {{ package }}
+
+- name: Verify {{ package }} in rpmdb
+  command: rpm -q {{ package }}

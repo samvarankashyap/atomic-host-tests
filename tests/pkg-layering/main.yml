@@ -1,0 +1,394 @@
+---
+# vim: set ft=ansible:
+#
+# !!!NOTE!!! This playbook was tested using Ansible 2.1; it is recommended
+# that the same version is used.
+#
+# This playbook is actually multiple playbooks contained in a single file.
+# I had to take this approach, because I encountered difficulties re-using
+# the same roles with non-unique variables.  Sometimes the roles would be
+# executed with the use of the 'always' tag, sometimes not.
+#
+# The wrinkle in this approach is that sharing global variables across the
+# multiple playbooks requires the use of a file containing the variables
+# which is included in each playbook with the 'vars_files' directive.
+#
+# Core Functionality
+#   - Verify rpms package can be layered through rpm-ostree install
+#   - Verify multiple rpm packages can be layered through rpm-ostree install
+#   - Verify rpm packages can be removed through rpm-ostree uninstall
+#   - Verify multiple rpm packages can be removed through rpm-ostree uninstall
+#   - Verify rpm-ostree status output displays "Package: <pkg1> <pkg2>.." when packages are layered
+#   - Verify the -r / --reboot flag reboots the host after rpm-ostree install or rpm-ostree uninstall
+#   - Verify the -n / --dry-run flag does not perform the package add/remove function and displays a summary of packages to be installed
+#   - Verify a dry-run of rpm-ostree install|uninstall does not affect an existing package that has been layered, but not rebooted.
+#   - Verify that after additional repos are enabled (i.e. EPEL), rpm-ostree install|uninstall can be successfully used for packages in those repos.
+#
+# Negative Testing
+#   - Verify correct error is displayed removing a package that does not exist
+#   - Verify correct error is displayed when adding a package that does not exists in the repo
+#   - Verify correct error message is displayed when adding a package that is already in the deployment
+#   - Verify packages which have files with non-root ownership cannot be installed
+#   - Verify that install/uninstall operations cannot be performed by unprivileged users
+#
+
+- name: Package Layering Tests - Setup
+  hosts: all
+  become: yes
+
+  tags:
+    - setup
+
+  vars_files:
+    - vars.yml
+
+  pre_tasks:
+    - name: Verify all
+      fail:
+        msg: "Required variables are not defined.  Check vars.yml file."
+      when: g_pkg1 is undefined or
+            g_pkg2 is undefined or
+            g_invalid_pkg is undefined or
+            g_nonroot_pkg is undefined or
+            g_deployed_pkg is undefined or
+            g_epel_pkg is undefined
+
+  roles:
+    # Subscribe if the system is RHEL
+    - role: redhat_subscription
+      when: ansible_distribution == 'RedHat'
+      tags:
+        - redhat_subscription
+
+
+- name: Package Layering - Single package install and uninstall test
+  hosts: all
+  become: yes
+
+  tags:
+    - single_pkg_install_uninstall
+
+  vars_files:
+    - vars.yml
+
+  roles:
+    - role: rpm_ostree_install
+      packages: "{{ g_pkg1 }}"
+      reboot: false
+
+    - role: reboot
+
+    - role: rpm_ostree_install_verify
+      package: "{{ g_pkg1 }}"
+
+    - role: rpm_ostree_uninstall
+      packages: "{{ g_pkg1 }}"
+      reboot: false
+
+    - role: reboot
+      tags:
+        - reboot
+
+    - role: rpm_ostree_uninstall_verify
+      package: "{{ g_pkg1 }}"
+
+- name: Package Layering - Multiple package install and uninstall test
+  hosts: all
+  become: yes
+
+  tags:
+    - multi_pkg_install_uninstall
+
+  vars_files:
+    - vars.yml
+
+  roles:
+    - role: rpm_ostree_install
+      packages: "{{ g_pkg1 }} {{ g_pkg2 }}"
+      reboot: false
+
+    - role: reboot
+
+    - role: rpm_ostree_install_verify
+      package: "{{ g_pkg1 }}"
+
+    - role: rpm_ostree_install_verify
+      package: "{{ g_pkg2 }}"
+
+    - role: rpm_ostree_uninstall
+      packages: "{{ g_pkg1 }} {{ g_pkg2 }}"
+      reboot: false
+
+    - role: reboot
+      tags:
+        - reboot
+
+    - role: rpm_ostree_uninstall_verify
+      package: "{{ g_pkg1 }}"
+
+    - role: rpm_ostree_uninstall_verify
+      package: "{{ g_pkg2 }}"
+
+- name: Package Layering - Reboot flag test
+  hosts: all
+  become: yes
+
+  tags:
+    - reboot_flag
+
+  vars_files:
+    - vars.yml
+
+  roles:
+    - role: rpm_ostree_install
+      packages: "{{ g_pkg1 }}"
+      reboot: true
+
+    - role: rpm_ostree_install_verify
+      package: "{{ g_pkg1 }}"
+
+    - role: rpm_ostree_uninstall
+      packages: "{{ g_pkg1 }}"
+      reboot: true
+
+    - role: rpm_ostree_uninstall_verify
+      package: "{{ g_pkg1 }}"
+
+- name: Package Layering - Dry run tests
+  hosts: all
+  become: yes
+
+  tags:
+    - dry_run
+
+  vars_files:
+    - vars.yml
+
+  tasks:
+    - name: Attempt to install package with -n / --dry-run option
+      command: rpm-ostree install "{{ g_pkg1 }}" -n
+      register: dry
+
+    - name: Fail if Exiting because of is not in output
+      fail:
+        msg: "Dry run output does not contain 'Exiting because'"
+      when: "'Exiting because' not in dry.stdout"
+
+    - include: verify_package_not_deployed.yml
+      vars:
+        package: "{{ g_pkg1 }}"
+
+
+- name: Package Layering - Dry run does not affect installed packages tests
+  hosts: all
+  become: yes
+
+  tags:
+    - dry_run_interaction
+
+  vars_files:
+    - vars.yml
+
+  tasks:
+    - name: Test Install {{ g_pkg1 }} and do not reboot
+      command: rpm-ostree install {{ g_pkg1 }}
+
+    - name: Dry run install {{ g_pkg2 }}
+      command: rpm-ostree install {{ g_pkg2 }} --dry-run
+      register: dryrun
+
+    - name: Fail if Exiting because of is not in output
+      fail:
+        msg: "Dry run output does not contain 'Exiting because'"
+      when: "'Exiting because' not in dryrun.stdout"
+
+    - name: Get rpm-ostree status --json output
+      command: rpm-ostree status --json
+      register: installed
+
+    - name: Convert rpm-ostree status output to jinja2 json
+      set_fact:
+        pending_json: "{{ installed.stdout | from_json }}"
+
+    - name: Set packages when deployment 0 is not booted
+      set_fact:
+        pending_pkgs: "{{ pending_json['deployments'][0]['packages'] }}"
+      when: pending_json['deployments'][0] is defined and not pending_json['deployments'][0]['booted']
+
+    - name: Set packages when deployment 1 is not booted
+      set_fact:
+        pending_pkgs: "{{ pending_json['deployments'][1]['packages'] }}"
+      when: pending_json['deployments'][1] is defined and not pending_json['deployments'][1]['booted']
+
+    - name: Fail if {{ g_pkg2 }} is in rpm-ostree status output for pending packages
+      fail:
+        msg: "{{ g_pkg2 }} in rpm-ostree status output"
+      when: "'{{ g_pkg2 }}' in pending_pkgs"
+
+    - name: Fail if {{ g_pkg1 }} is not in rpm-ostree status output for pending packages
+      fail:
+        msg: "{{ g_pkg1 }} not in rpm-ostree status output"
+      when: "'{{ g_pkg1 }}' not in pending_pkgs"
+
+    - name: Fail if {{ g_pkg1 }} is installed
+      command: command -v {{ g_pkg1 }}
+      register: binary
+      failed_when: binary.rc != 1
+
+- name: Package Layering - install package from EPEL repo test
+  hosts: all
+  become: yes
+
+  tags:
+    - alternate_repo_install
+
+  vars_files:
+    - vars.yml
+
+  tasks:
+    - name: Copy GPG Key to Host
+      copy:
+        src=RPM-GPG-KEY-EPEL-7
+        dest=/etc/pki/rpm-gpg/
+
+    - name: Add EPEL repo
+      yum_repository:
+        name: epel
+        description: Extra Packages for Enterprise Linux 7 - $basearch
+        mirrorlist: https://mirrors.fedoraproject.org/metalink?repo=epel-7&arch=$basearch
+        failovermethod: priority
+        gpgcheck: yes
+        enabled: yes
+        gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
+
+    - name: Install {{ g_epel_pkg }} from EPEL
+      command: rpm-ostree install {{ g_epel_pkg }}
+
+    - name: restart hosts
+      shell: sleep 3 && shutdown -r now
+      async: 1
+      poll: 0
+      ignore_errors: true
+
+    - name: wait for hosts to come back up (inventory_hostname)
+      local_action:
+        wait_for host={{ inventory_hostname }}
+        port=22
+        state=started
+        delay=15
+        timeout=120
+      become: false
+
+    - include: verify_package_deployed.yml
+      vars:
+        package: "{{ g_epel_pkg }}"
+
+- name: Package Layering - Negative test - Uninstalling non-existent package
+  hosts: all
+  become: yes
+
+  tags:
+    - uninstall_invalid_pkg
+
+  vars_files:
+    - vars.yml
+
+  tasks:
+    - name: Attempt to uninstall non-existent package
+      command: rpm-ostree uninstall {{ g_invalid_pkg }}
+      register: uninstall
+      failed_when: uninstall.rc != 1
+
+    - name: Fail if error not expected
+      fail:
+        msg: "Command error not expected"
+      when: "'Package \\'{{ g_invalid_pkg }}\\' is not currently requested' not in uninstall.stderr"
+
+
+- name: Package Layering - Negative Test - Installing non-existent package
+  hosts: all
+  become: yes
+
+  tags:
+    - install_invalid_pkg
+
+  vars_files:
+    - vars.yml
+
+  tasks:
+    - name: Attempt to install non-existent package
+      command: rpm-ostree install {{ g_invalid_pkg }}
+      register: nonexist
+      failed_when: nonexist.rc != 1
+
+    - name: Fail if error not expected
+      fail:
+        msg: "Command error not expected"
+      when: "'No package' not in nonexist.stderr"
+
+
+- name: Package Layering - Negative Test - Installing existing package
+  hosts: all
+  become: yes
+
+  tags:
+    - install_existing_pkg
+
+  vars_files:
+    - vars.yml
+
+  tasks:
+    - name: Attempt to install package that is already in the deployment
+      command: rpm-ostree install {{ g_deployed_pkg }}
+      register: already
+      failed_when: already.rc != 1
+
+    - name: Fail if error message is incorrect
+      fail:
+        msg: "Error is incorrect"
+      when: "'package \\'{{ g_deployed_pkg }}\\' is already in the deployment' not in already.stderr"
+
+
+- name: Package Layering - Negative Test - Installing non-root ownership package
+  hosts: all
+  become: yes
+
+  tags:
+    - install_nonroot_pkg
+
+  vars_files:
+    - vars.yml
+
+  tasks:
+    - name: Attempt to install package with non-root ownership
+      command: rpm-ostree install {{ g_nonroot_pkg }}
+      register: nonroot
+      failed_when: nonroot.rc != 1
+
+    - name: Fail if error message is incorrect
+      fail:
+        msg: "Error is incorrect"
+      when: "'Non-root ownership currently unsupported' not in nonroot.stderr"
+
+
+- name: Package Layering - Negative Test - Installing without sufficient privileges
+  hosts: all
+  become: yes
+
+  tags:
+    - install_unprivileged
+
+  vars_files:
+    - vars.yml
+
+  tasks:
+    - name: Attempt to install package with insufficient privileges
+      command: rpm-ostree install {{ g_pkg1 }}
+      register: unprivileged
+      become: false
+      failed_when: unprivileged.rc != 1
+
+    - name: Verify error message
+      fail:
+        msg: "Error message was incorrect"
+      when: "'Rejected send message' not in unprivileged.stderr"
