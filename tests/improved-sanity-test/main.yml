@@ -216,6 +216,10 @@
       tags:
         - semanage_add_verify
 
+    - role: docker_pull_run_remove
+      tags:
+        - docker_pull_run_remove
+
     # Check layered package is still installed
     - role: rpm_ostree_install_verify
       package: "{{ g_pkg }}"
