@@ -69,7 +69,7 @@ interfere with your current workspace.
 To setup a virtualenv, follow the steps below after cloning atomic-host-tests:
 
 ```
-pip install virtualenv`
+pip install virtualenv
 virtualenv my_env
 source my_env/bin/activate
 pip install -r requirements.txt
