@@ -68,10 +68,12 @@ interfere with your current workspace.
 
 To setup a virtualenv, follow the steps below after cloning atomic-host-tests:
 
-`pip install virtualenv`
-`virtualenv my_env`
-`source my_env/bin/activate`
-`pip install -r requirements.txt`
+```
+pip install virtualenv`
+virtualenv my_env
+source my_env/bin/activate
+pip install -r requirements.txt
+```
 
 ### Running Playbooks
 All the playbooks should be able to be run without any extra options on the
