@@ -28,6 +28,8 @@ found in the repo are currently unmaintained and may not work correctly.
 
 - [ostree admin unlock](tests/admin-unlock/main.yml)
   - Verifies the ability to install packages using `ostree admin unlock`
+- [Docker Build httpd](tests/docker-build-httpd/main.yml)
+  - Attempts to build a `httpd` container using various base images
 - [Docker Swarm](tests/docker-swarm/main.yml)
   - Covers the basic functionality of the `docker swarm` commands
 - [Docker/Docker Latest](tests/docker/main.yml)
