@@ -102,6 +102,43 @@
       tags:
         - docker_rmi_httpd_image
 
+- name: Docker - Cleanup
+  hosts: all
+  become: yes
+
+  tags:
+    - cleanup
+
+  vars_files:
+    - vars.yml
+
+  pre_tasks:
+    - block:
+      - name: Stop and disable docker-latest
+        service:
+          name: docker-latest
+          enabled: no
+          state: stopped
+
+      - name: Revert docker-latest binary
+        replace:
+          dest: /etc/sysconfig/docker
+          regexp: 'DOCKERBINARY=/usr/bin/docker-latest'
+          replace: '#DOCKERBINARY=/usr/bin/docker-latest'
+
+      - name: Re-enable docker
+        service:
+          name: docker
+          enabled: yes
+          state: started
+      when: g_docker_latest
+
+  roles:
     - role: docker_remove_all
       tags:
-        - docker_remove_all2
+        - docker_remove_all
+
+    - role: redhat_unsubscribe
+      when: ansible_distribution == 'RedHat'
+      tags:
+        - redhat_unsubscribe
