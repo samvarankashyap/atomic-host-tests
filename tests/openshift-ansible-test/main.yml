@@ -1,0 +1,56 @@
+---
+# vim: set ft=ansible:
+#
+- name: OpenShift Ansible Installer Test
+  hosts: all
+
+  tasks:
+    - name: Setup vars for templating the inventory, etc.
+      set_fact:
+        oo_ansible_user: "{{ cli_ansible_user | default(ansible_user) }}"
+        oo_ansible_tag: "{{ cli_oo_ansible_tag | default('master') }}"
+        oo_host: "{{ cli_oo_host | default(ansible_host) }}"
+        oo_release: "{{ cli_oo_release | default('1.5.1') }}"
+
+    - name: Make temp directory of holding
+      command: mktemp -d
+      register: mktemp
+      delegate_to: localhost
+
+    - name: git clone openshift-ansible repo
+      git:
+        repo: "https://github.com/openshift/openshift-ansible.git"
+        dest: "{{ mktemp.stdout }}"
+        version: "{{ oo_ansible_tag }}"
+      delegate_to: localhost
+
+    - name: Template the inventory file
+      template:
+        src: "templates/cluster-inventory.j2"
+        dest: "{{ mktemp.stdout }}/cluster-inventory"
+      delegate_to: localhost
+
+    - name: Run the openshift-ansible playbook
+      command: ansible-playbook -i cluster-inventory playbooks/byo/config.yml -e 'ansible_python_interpreter=/usr/bin/python3'
+      args:
+        chdir: "{{ mktemp.stdout }}"
+      delegate_to: localhost
+      register: playbook
+
+    - name: Wait for 8443 to open up
+      wait_for:
+        port: 8443
+        delay: 60
+
+      # this may not be required
+    - name: Add admin user to cluster-admin role
+      command: /usr/local/bin/oadm policy add-cluster-role-to-user cluster-admin admin
+
+    - name: Login to the cluster
+      command: "/usr/local/bin/oc login -u admin -p OriginAdmin https://{{ oo_host }}:8443"
+
+      # this is kind of a hack
+    - name: Verify pods are running
+      command: /usr/local/bin/oc get pods -o jsonpath='{.items[*].status.phase}'
+      register: pods
+      failed_when: pods.stdout != "Running Running Running"

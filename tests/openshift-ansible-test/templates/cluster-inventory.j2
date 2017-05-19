@@ -1,0 +1,27 @@
+[OSEv3:children]
+masters
+nodes
+etcd
+
+[OSEv3:vars]
+ansible_user={{ oo_ansible_user }}
+ansible_become=true
+deployment_type=origin
+containerized=true
+openshift_release={{ oo_release }}
+openshift_master_default_subdomain={{ oo_host}}.xip.io
+openshift_router_selector='router=true'
+openshift_registry_selector='registry=true'
+
+# enable htpasswd auth
+openshift_master_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 'challenge': 'true', 'kind': 'HTPasswdPasswordIdentityProvider', 'filename': '/etc/origin/master/htpasswd'}]
+openshift_master_htpasswd_users={'admin': '$apr1$zgSjCrLt$1KSuj66CggeWSv.D.BXOA1'}
+
+[masters]
+{{ oo_host }}
+
+[etcd]
+{{ oo_host }}
+
+[nodes]
+{{ oo_host }}  openshift_schedulable=true openshift_node_labels="{'router':'true','registry':'true'}"
