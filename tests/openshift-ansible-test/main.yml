@@ -9,8 +9,11 @@
       set_fact:
         oo_ansible_user: "{{ cli_ansible_user | default(ansible_user) }}"
         oo_ansible_tag: "{{ cli_oo_ansible_tag | default('master') }}"
-        oo_host: "{{ cli_oo_host | default(ansible_host) }}"
+        oo_public_host: "{{ cli_oo_public_host | default(ansible_host) }}"
+        oo_host: "{{ cli_oo_host | default(ansible_default_ipv4.address) }}"
         oo_release: "{{ cli_oo_release | default('1.5.1') }}"
+        oo_py_interpreter: "{{ '-e ansible_python_interpreter=/usr/bin/python3' if ansible_distribution == 'Fedora' else '' }}"
+        oo_skip_memory_check: "{{ '-e openshift_disable_check=memory_availability' if ansible_memtotal_mb|int < 8192 else '' }}"
 
     - name: Make temp directory of holding
       command: mktemp -d
@@ -31,11 +34,10 @@
       delegate_to: localhost
 
     - name: Run the openshift-ansible playbook
-      command: ansible-playbook -i cluster-inventory playbooks/byo/config.yml -e 'ansible_python_interpreter=/usr/bin/python3'
+      command: "ansible-playbook -i cluster-inventory playbooks/byo/config.yml {{ oo_py_interpreter }} {{ oo_skip_memory_check }}"
       args:
         chdir: "{{ mktemp.stdout }}"
       delegate_to: localhost
-      register: playbook
 
     - name: Wait for 8443 to open up
       wait_for:
@@ -47,10 +49,12 @@
       command: /usr/local/bin/oadm policy add-cluster-role-to-user cluster-admin admin
 
     - name: Login to the cluster
-      command: "/usr/local/bin/oc login -u admin -p OriginAdmin https://{{ oo_host }}:8443"
+      command: "/usr/local/bin/oc login -u admin -p OriginAdmin https://{{ oo_public_host }}:8443"
 
-      # this is kind of a hack
+      # this is kind of a hack; sometimes need to wait (5m) for the pods
     - name: Verify pods are running
       command: /usr/local/bin/oc get pods -o jsonpath='{.items[*].status.phase}'
       register: pods
-      failed_when: pods.stdout != "Running Running Running"
+      until: pods.stdout == "Running Running Running"
+      retries: 10
+      delay: 30

@@ -9,7 +9,7 @@ ansible_become=true
 deployment_type=origin
 containerized=true
 openshift_release={{ oo_release }}
-openshift_master_default_subdomain={{ oo_host}}.xip.io
+openshift_master_default_subdomain={{ oo_public_host }}.xip.io
 openshift_router_selector='router=true'
 openshift_registry_selector='registry=true'
 
@@ -18,10 +18,10 @@ openshift_master_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 
 openshift_master_htpasswd_users={'admin': '$apr1$zgSjCrLt$1KSuj66CggeWSv.D.BXOA1'}
 
 [masters]
-{{ oo_host }}
+{{ oo_public_host }} openshift_public_hostname={{ oo_public_host }} openshift_hostname={{ oo_host }}
 
 [etcd]
-{{ oo_host }}
+{{ oo_public_host }}
 
 [nodes]
-{{ oo_host }}  openshift_schedulable=true openshift_node_labels="{'router':'true','registry':'true'}"
+{{ oo_public_host }} openshift_schedulable=true openshift_node_labels="{'router':'true','registry':'true'}"
