@@ -19,13 +19,12 @@ testing or deployment of additional apps/projects afterwards.
     [roles/redhat_subscription/tasks/main.yml](roles/redhat_subscription/tasks/main.yml)
     for additional details.
 
-
 ### Running the Playbook
 
 To run the test, simply invoke as any other Ansible playbook:
 
 ```
-$ ansible-playbook -i inventory tests/system-containers/main.yml
+$ ansible-playbook -i inventory tests/openshift-ansible-testing/main.yml
 ```
 
 *NOTE*: You are responsible for providing a host to run the test against and the
