@@ -21,11 +21,18 @@ testing or deployment of additional apps/projects afterwards.
 
 ### Running the Playbook
 
+*NOTE*: You are responsible for providing a host to run the test against and the
+inventory file for that host.
+
 To run the test, simply invoke as any other Ansible playbook:
 
 ```
 $ ansible-playbook -i inventory tests/openshift-ansible-testing/main.yml
 ```
 
-*NOTE*: You are responsible for providing a host to run the test against and the
-inventory file for that host.
+*NOTE*: If you are running this playbook against a host in the Amazon EC2 environment, it has
+been reported you will need to set the `cli_oo_host` variable to the internal IP
+address of your EC2 instance.  This can be done via the `inventory` file passed in
+or on the command line like so:
+
+`$ ansible-playbok -i inventory -e cli_oo_host=10.0.36.120 tests/openshift-ansible-testing/main.yml`

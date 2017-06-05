@@ -10,6 +10,14 @@
         oo_ansible_user: "{{ cli_ansible_user | default(ansible_user) }}"
         oo_ansible_tag: "{{ cli_oo_ansible_tag | default('master') }}"
         oo_public_host: "{{ cli_oo_public_host | default(ansible_host) }}"
+        # NOTE: If you intend to run the playbook against a host in the Amazon
+        # EC2 enviroment, it has been reported that you will need to set the
+        # 'cli_oo_host' variable to the interal IP address of your EC2
+        # instance.  This can be done via the inventory file or on the command
+        # line, like so:
+        #
+        # $ ansible-playbook -i inventory -e cli_oo_host=10.0.36.120 tests/openshift-ansible-testing/main.yml
+        #
         oo_host: "{{ cli_oo_host | default(ansible_default_ipv4.address) }}"
         oo_release: "{{ cli_oo_release | default('1.5.1') }}"
         oo_py_interpreter: "{{ '-e ansible_python_interpreter=/usr/bin/python3' if ansible_distribution == 'Fedora' else '' }}"
