@@ -21,14 +21,21 @@
 # Below we use string formatting to use a variable as the name of the file in
 # the lookup()
 # via http://stackoverflow.com/a/34239020
-#
-  - name: Get origin file
-    command: ostree admin --print-current-dir
-    register: origin_file
 
-  - name: Get refspec from origin file
-    command: grep refspec {{ origin_file.stdout }}.origin
-    register: refspec
+  - name: Determine is_atomic True/False
+    include: '../../common/set_is_atomic.yml'
+
+  - block:
+
+    - name: Get origin file
+      command: ostree admin --print-current-dir
+      register: origin_file
+
+    - name: Get refspec from origin file
+      command: grep refspec {{ origin_file.stdout }}.origin
+      register: refspec
+
+    when: is_atomic
 
   - name: Fail if subscription_file is not defined
     fail:
@@ -71,4 +78,5 @@
       dest: "{{ origin_file.stdout }}.origin"
       regexp: '^refspec.*$'
       replace: "{{ refspec.stdout }}"
-    when: refspec.stdout.find("refspec=rhel-atomic-host") == -1
+      when: is_atomic and
+            refspec.stdout.find("refspec=rhel-atomic-host") == -1
