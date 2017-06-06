@@ -6,6 +6,7 @@ etcd
 [OSEv3:vars]
 ansible_user={{ oo_ansible_user }}
 ansible_become=true
+ansible_ssh_private_key_file=/root/.ssh/id_rsa
 deployment_type=origin
 containerized=true
 openshift_release={{ oo_release }}
