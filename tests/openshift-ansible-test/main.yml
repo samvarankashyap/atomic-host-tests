@@ -48,7 +48,7 @@
       delegate_to: localhost
 
     - name: Run the openshift-ansible playbook
-      command: "ansible-playbook -i cluster-inventory playbooks/byo/config.yml {{ oo_py_interpreter }} {{ oo_skip_memory_check }}"
+      command: "ansible-playbook -i cluster-inventory playbooks/byo/config.yml {{ oo_py_interpreter }} {{ oo_skip_memory_check }} --private-key=/root/.ssh/id_rsa"
       args:
         chdir: "{{ mktemp.stdout }}"
       delegate_to: localhost
