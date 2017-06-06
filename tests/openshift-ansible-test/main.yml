@@ -40,6 +40,12 @@
         src: "templates/cluster-inventory.j2"
         dest: "{{ mktemp.stdout }}/cluster-inventory"
       delegate_to: localhost
+    
+    - name: Template the ansible.cfg
+      template:
+        src: "templates/ansible.cfg.j2"
+        dest: "{{ mktemp.stdout }}/ansible.cfg"
+      delegate_to: localhost
 
     - name: Run the openshift-ansible playbook
       command: "ansible-playbook -i cluster-inventory playbooks/byo/config.yml {{ oo_py_interpreter }} {{ oo_skip_memory_check }}"
