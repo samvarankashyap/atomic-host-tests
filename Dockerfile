@@ -1,13 +1,15 @@
-FROM fedora 
-RUN dnf update -y
-RUN dnf install -y git python-pip
-RUN dnf install -y libselinux-python
-RUN dnf groupinstall -y "Development Tools"
-RUN dnf install -y python-devel 
-RUN dnf install -y libffi-devel
-RUN dnf install -y redhat-rpm-config
-RUN dnf install -y openssl-devel
-RUN pip install ansible
+FROM registry.fedoraproject.org/fedora:25
+RUN dnf -y install \
+    git \
+    python-pip \
+    libselinux-python \
+    python-devel \
+    libffi-devel \
+    redhat-rpm-config \
+    openssl-devel && \
+    dnf -y groupinstall "Development Tools"
 RUN git clone https://github.com/projectatomic/atomic-host-tests
 WORKDIR "/atomic-host-tests"
-RUN echo "$PWD"
+RUN pip install -r requirements.txt
+COPY .aht.sh /aht.sh
+ENTRYPOINT ["/aht.sh"]
