@@ -40,6 +40,12 @@
         src: "templates/cluster-inventory.j2"
         dest: "{{ mktemp.stdout }}/cluster-inventory"
       delegate_to: localhost
+
+    - name: Template the inventory file to /tmp folder for flexible access in container
+      template:
+        src: "templates/cluster-inventory.j2"
+        dest: "/tmp/cluster-inventory"
+      delegate_to: localhost
     
     - name: Template the ansible.cfg
       template:
