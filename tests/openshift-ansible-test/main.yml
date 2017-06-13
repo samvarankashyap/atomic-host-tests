@@ -1,0 +1,68 @@
+---
+# vim: set ft=ansible:
+#
+- name: OpenShift Ansible Installer Test
+  hosts: all
+
+  tasks:
+    - name: Setup vars for templating the inventory, etc.
+      set_fact:
+        oo_ansible_user: "{{ cli_ansible_user | default(ansible_user) }}"
+        oo_ansible_tag: "{{ cli_oo_ansible_tag | default('master') }}"
+        oo_public_host: "{{ cli_oo_public_host | default(ansible_host) }}"
+        # NOTE: If you intend to run the playbook against a host in the Amazon
+        # EC2 enviroment, it has been reported that you will need to set the
+        # 'cli_oo_host' variable to the interal IP address of your EC2
+        # instance.  This can be done via the inventory file or on the command
+        # line, like so:
+        #
+        # $ ansible-playbook -i inventory -e cli_oo_host=10.0.36.120 tests/openshift-ansible-testing/main.yml
+        #
+        oo_host: "{{ cli_oo_host | default(ansible_default_ipv4.address) }}"
+        oo_release: "{{ cli_oo_release | default('1.5.1') }}"
+        oo_py_interpreter: "{{ '-e ansible_python_interpreter=/usr/bin/python3' if ansible_distribution == 'Fedora' else '' }}"
+        oo_skip_memory_check: "{{ '-e openshift_disable_check=memory_availability' if ansible_memtotal_mb|int < 8192 else '' }}"
+
+    - name: Make temp directory of holding
+      command: mktemp -d
+      register: mktemp
+      delegate_to: localhost
+
+    - name: git clone openshift-ansible repo
+      git:
+        repo: "https://github.com/openshift/openshift-ansible.git"
+        dest: "{{ mktemp.stdout }}"
+        version: "{{ oo_ansible_tag }}"
+      delegate_to: localhost
+
+    - name: Template the inventory file
+      template:
+        src: "templates/cluster-inventory.j2"
+        dest: "{{ mktemp.stdout }}/cluster-inventory"
+      delegate_to: localhost
+
+    - name: Run the openshift-ansible playbook
+      command: "ansible-playbook -i cluster-inventory playbooks/byo/config.yml {{ oo_py_interpreter }} {{ oo_skip_memory_check }}"
+      args:
+        chdir: "{{ mktemp.stdout }}"
+      delegate_to: localhost
+
+    - name: Wait for 8443 to open up
+      wait_for:
+        port: 8443
+        delay: 60
+
+      # this may not be required
+    - name: Add admin user to cluster-admin role
+      command: /usr/local/bin/oadm policy add-cluster-role-to-user cluster-admin admin
+
+    - name: Login to the cluster
+      command: "/usr/local/bin/oc login -u admin -p OriginAdmin https://{{ oo_public_host }}:8443"
+
+      # this is kind of a hack; sometimes need to wait (5m) for the pods
+    - name: Verify pods are running
+      command: /usr/local/bin/oc get pods -o jsonpath='{.items[*].status.phase}'
+      register: pods
+      until: pods.stdout == "Running Running Running"
+      retries: 10
+      delay: 30
