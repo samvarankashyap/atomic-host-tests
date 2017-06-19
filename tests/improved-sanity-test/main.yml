@@ -173,13 +173,14 @@
         - cloud_image
 
     - role: rpm_install
-      rpm_name: "{{ g_rpm_name }}"
+      rpm_url: "{{ g_rpm_url }}"
       tags:
         - rpm_install
         - cloud_image
 
     - role: package_verify_present
       rpm_name: "{{ g_rpm_name }}"
+      check_binary: false
       tags:
         - package_verify_present
         - cloud_image
