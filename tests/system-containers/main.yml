@@ -575,3 +575,8 @@
     - role: atomic_images_delete_all
       tags:
         - atomic_images_delete_all
+
+    - role: redhat_unsubscribe
+      when: ansible_distribution == 'RedHat'
+      tags:
+        - redhat_unsubscribe
