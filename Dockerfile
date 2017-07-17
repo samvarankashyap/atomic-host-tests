@@ -12,5 +12,5 @@ RUN dnf -y install \
 RUN git clone https://github.com/projectatomic/atomic-host-tests
 WORKDIR "/atomic-host-tests"
 RUN pip install -r requirements.txt
-COPY .aht.sh /aht.sh
-ENTRYPOINT ["/aht.sh"]
+COPY .aht.py /aht.py
+ENTRYPOINT ["/aht.py"]
