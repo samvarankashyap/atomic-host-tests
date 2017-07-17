@@ -6,8 +6,9 @@ RUN dnf -y install \
     python-devel \
     libffi-devel \
     redhat-rpm-config \
-    openssl-devel && \
-    dnf -y groupinstall "Development Tools"
+    openssl-devel \
+    gcc \
+    rpm-build  
 RUN git clone https://github.com/projectatomic/atomic-host-tests
 WORKDIR "/atomic-host-tests"
 RUN pip install -r requirements.txt
