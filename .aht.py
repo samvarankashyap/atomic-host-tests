@@ -12,6 +12,7 @@
 import os
 import sys
 import argparse
+import subprocess
 
 def parse_args(args=None):
     parser = argparse.ArgumentParser(description='Atomic hosts tests helper script')
@@ -31,5 +32,8 @@ def parse_args(args=None):
     return(actual_path)
 
 if __name__ == '__main__':
+    path = os.path.dirname("/atomic-host-tests/")
+    p = subprocess.Popen(["/usr/bin/git", "pull", "origin", "master"], cwd=path)
+    p.wait()
     testpath = parse_args(sys.argv[1:])
     print(testpath)
